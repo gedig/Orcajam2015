@@ -1,0 +1,17 @@
+#Filetypes
+*.csproj
+*.dll
+*.dwlt
+*.log
+*.mdb
+*.dll.mdb
+*.meta
+*.sln
+*.stamp
+*.suo
+
+#Folders
+obj/*
+Temp/*
+Library/ShaderCache/*
+Library/metadata/*
