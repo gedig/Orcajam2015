@@ -44,13 +44,17 @@ public class PlayerInputController : Singleton<PlayerInputController> {
         return aimVector;
     }
 
+    public bool GetFoghorn(int playerID, int foghornID = 1) {
+        return players[playerID].GetButton("Foghorn" + foghornID);
+    }
+
     #region DropIn
     public int CheckForDropIn() {
         // Check for drop-in players
         for (int i = 0; i < 8; i++) {
             if (!isAssigned[i]) {
                 // Check if any bases are being selected. If they are then tell GameController about the request
-                if (players[i].GetButtonDown("Foghorn")) {
+                if (players[i].GetAnyButtonDown()) {
                     isAssigned[i] = true;
                     return i;
                 }

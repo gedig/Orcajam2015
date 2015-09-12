@@ -40,15 +40,19 @@ public class PlayerLogic : Logic {
     private Vector2 spawnPos;
     private Quaternion spawnRot;
     #endregion
+    private AudioSource audio;
+    [SerializeField] private AudioClip[] foghorns;
 
     public void Awake() {
-        rigidBodyRef = GetComponent<Rigidbody>();
+        audio = GetComponent<AudioSource>();
         coreComponent = GetComponent<GameEntity>();
+        rigidBodyRef = GetComponent<Rigidbody>();
     }
 
     public void Init(GameController gc, int playerID, Vector2 spawnPos, Quaternion spawnRot) {
         this.spawnPos = transform.position = spawnPos;
         this.spawnRot = spawnRot;
+        this.inputID = playerID;
         coreComponent.GameController = gc;
     }
 
@@ -69,8 +73,10 @@ public class PlayerLogic : Logic {
         }
         
         //if (actor == GameSettings.TeamActor.Human) {
-            if (!Dead)
-                ProcessMovementInput();
+        if (!Dead) {
+            ProcessMovementInput();
+            ProcessButtons();
+        }
         //} else {
             // TODO-DG: AI for computer players
         //}
@@ -107,6 +113,15 @@ public class PlayerLogic : Logic {
                 // Shoot!
                 //coreComponent.GameController.ShootBullet(aimVector, this);
                 shotTimer = attackCooldown;
+            }
+        }
+    }
+
+    private void ProcessButtons() {
+        for (int i = 0; i < foghorns.Length; i++) {
+            if (PlayerInputController.Instance.GetFoghorn(inputID, i+1)) {
+                // Play Foghorn sound
+                audio.PlayOneShot(foghorns[i]);
             }
         }
     }
