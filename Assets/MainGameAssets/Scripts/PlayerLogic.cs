@@ -40,13 +40,21 @@ public class PlayerLogic : Logic {
     private Vector2 spawnPos;
     private Quaternion spawnRot;
     #endregion
-    private AudioSource audio;
+    private AudioSource mAudio;
+    private ParticleSystem particle;
+    private Transform horn;
+    private IEnumerator hornAnim;
+    private bool hornAnimating = false;
     [SerializeField] private AudioClip[] foghorns;
 
     public void Awake() {
-        audio = GetComponent<AudioSource>();
+        hornAnim = HornAnim();
+        Transform child = transform.Find("Model");
+        horn = child.Find("Horn");
+        mAudio = child.GetComponent<AudioSource>();
         coreComponent = GetComponent<GameEntity>();
-        rigidBodyRef = transform.Find("Model").GetComponent<Rigidbody>();
+        particle = horn.GetComponent<ParticleSystem>();
+        rigidBodyRef = child.GetComponent<Rigidbody>();
     }
 
     public void Init(GameController gc, int playerID, Vector2 spawnPos, Quaternion spawnRot) {
@@ -121,8 +129,55 @@ public class PlayerLogic : Logic {
         for (int i = 0; i < foghorns.Length; i++) {
             if (PlayerInputController.Instance.GetFoghorn(inputID, i+1)) {
                 // Play Foghorn sound
-                audio.PlayOneShot(foghorns[i]);
+                mAudio.PlayOneShot(foghorns[i]);
+                particle.Emit(1);
+                // TODO-DG: Lerp horn to animate up to 3x in x or y, shrink down to .5x, then return to normal
+                if (!hornAnimating) {
+                    StopCoroutine(hornAnim);
+                    hornAnim = HornAnim(); // Seriously no better way to reset a coroutine? :/
+                    StartCoroutine(hornAnim);
+                }
             }
+        }
+    }
+
+    private float maxSize = 3.0f;
+    private float minSize = .5f;
+    private WaitForFixedUpdate itsame = new WaitForFixedUpdate();
+    private IEnumerator HornAnim() {
+        hornAnimating = true;
+        bool scaleX = (Random.value < .5f);
+        float scaleFactor = scaleX ? horn.localScale.x : horn.localScale.y;
+        int numFrames = 30;
+        float animRate = (maxSize - scaleFactor) / numFrames;
+        for (int i = 0; i < numFrames; i++) {
+            scaleFactor += animRate;
+            PerformScale(scaleFactor, scaleX);
+            yield return itsame;
+        }
+        numFrames = 30;
+        animRate = (maxSize - minSize) / numFrames;
+        for (int i = 0; i < numFrames; i++) {
+            scaleFactor -= animRate;
+            PerformScale(scaleFactor, scaleX);
+            yield return itsame;
+        }
+        numFrames = 30;
+        animRate = (1.0f - minSize) / numFrames;
+        for (int i = 0; i < numFrames; i++) {
+            scaleFactor += animRate;
+            PerformScale(scaleFactor, scaleX);
+            yield return itsame;
+        }
+        hornAnimating = false;
+    }
+
+    // Return true if we are at the size.
+    private void PerformScale(float scaleFactor, bool scaleX) {
+        if (scaleX) {
+            horn.localScale = new Vector3(scaleFactor, 1.0f, 1.0f);
+        } else {
+            horn.localScale = new Vector3(1.0f, scaleFactor, 1.0f);
         }
     }
 
@@ -134,7 +189,6 @@ public class PlayerLogic : Logic {
             }
             Vector3 targetPosition = new Vector3(moveVector.x, 0f, moveVector.z);
             transform.Find("Model").right = targetPosition;
-            //transform.right = targetPosition;
         }
     }
     public void Respawn() {
