@@ -3,24 +3,21 @@ using System.Collections;
 
 public class PlayerLogic : Logic {
 
-    #region Player Stats
-    public int Level = 1;
-    #endregion
     #region Components
     private GameEntity coreComponent;
-    private Rigidbody2D rigidBodyRef;
+    private Rigidbody rigidBodyRef;
     #endregion
     #region Control Information
     private int inputID;  // The rewired player.
-    private Vector2 moveVector;
-    private Vector2 aimVector;
+    private Vector3 moveVector;
+    private Vector3 aimVector;
     #endregion
     #region AI
     //private GameSettings.TeamActor actor; // TODO-DG: We could totally put AI in woah
     #endregion
     #region Movement
-    public float Acceleration = 5.0f;
-    public float MaxSpeed = 3.0f;
+    public float Acceleration = 30.0f;
+    public float MaxSpeed = 20.0f;
     #endregion
     #region Attacking
     private float attackCooldown = 0.5f;
@@ -44,12 +41,15 @@ public class PlayerLogic : Logic {
     private Quaternion spawnRot;
     #endregion
 
+    public void Awake() {
+        rigidBodyRef = GetComponent<Rigidbody>();
+        coreComponent = GetComponent<GameEntity>();
+    }
+
     public void Init(GameController gc, int playerID, Vector2 spawnPos, Quaternion spawnRot) {
         this.spawnPos = transform.position = spawnPos;
         this.spawnRot = spawnRot;
-        coreComponent = GetComponent<GameEntity>();
         coreComponent.GameController = gc;
-        rigidBodyRef = GetComponent<Rigidbody2D>();
     }
 
     float shotTimer = 0.0f;
@@ -112,15 +112,15 @@ public class PlayerLogic : Logic {
     }
 
     private void MovePlayer() {
-        if (moveVector.x != 0.0f || moveVector.y != 0.0f) {
+        if (moveVector.x != 0.0f || moveVector.z != 0.0f) {
             rigidBodyRef.AddForce(moveVector * Acceleration);
             if (rigidBodyRef.velocity.magnitude > MaxSpeed) {
                 rigidBodyRef.velocity = rigidBodyRef.velocity.normalized * MaxSpeed;
             }
-            coreComponent.ChildSprite.transform.up = moveVector.normalized;
+            Vector3 targetPosition = new Vector3(moveVector.x, this.transform.position.y, moveVector.z);
+            transform.right = targetPosition;
         }
     }
-
     public void Respawn() {
         /*transform.position = spawnPos;
         Dead = false;

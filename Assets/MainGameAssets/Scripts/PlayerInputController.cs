@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using Rewired;
 
 /**
@@ -10,13 +9,13 @@ public class PlayerInputController : Singleton<PlayerInputController> {
 
     protected PlayerInputController () {} // Guarantees the singleton is only ever created once
 
-    private Player[] players;
+    private Rewired.Player[] players;
     private bool[] isAssigned;
 
     public void Start() {
         DontDestroyOnLoad(this);
 
-        players = new Player[8];
+        players = new Rewired.Player[8];
         isAssigned = new bool[8];
         for (int i = 0; i < 8; i++) {
             players[i] = ReInput.players.GetPlayer(i);
@@ -31,37 +30,33 @@ public class PlayerInputController : Singleton<PlayerInputController> {
         isAssigned[id] = true;
     }
 
-    public Vector2 GetMovement(int id) {
-        Vector2 moveVector = new Vector2();
+    public Vector3 GetMovement(int id) {
+        Vector3 moveVector = new Vector2();
         moveVector.x = players[id].GetAxis("MoveHorizontal");
-        moveVector.y = players[id].GetAxis("MoveVertical");
+        moveVector.z = players[id].GetAxis("MoveVertical");
         return moveVector;
     }
 
-    public Vector2 GetAim(int id) {
-        Vector2 aimVector = new Vector2();
+    public Vector3 GetAim(int id) {
+        Vector3 aimVector = new Vector2();
         aimVector.x = players[id].GetAxis("AimHorizontal");
-        aimVector.y = players[id].GetAxis("AimVertical");
+        aimVector.z = players[id].GetAxis("AimVertical");
         return aimVector;
     }
 
     #region DropIn
-    /*public GameObject CheckForDropIn(out int playerID) {
+    public int CheckForDropIn() {
         // Check for drop-in players
-        GameObject baseToJoin;
-        playerID = -1;
         for (int i = 0; i < 8; i++) {
             if (!isAssigned[i]) {
                 // Check if any bases are being selected. If they are then tell GameController about the request
-                QueryCommandButtons(i, out baseToJoin);
-                if (baseToJoin != null) {
+                if (players[i].GetButtonDown("Foghorn")) {
                     isAssigned[i] = true;
-                    playerID = i;
-                    return baseToJoin;
+                    return i;
                 }
             }
         }
-        return null;
+        return -1;
     }
     /**
      * If there are unassigned players, return the base that they have requested to join
