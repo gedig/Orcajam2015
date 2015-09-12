@@ -9,9 +9,13 @@
 *.sln
 *.stamp
 *.suo
+*.userprefs
+Library/assetDatabase*
+
 
 #Folders
 obj/*
+ProjectSettings/*
 Temp/*
 RewiredBackup/*
 Assets/Rewired/*
