@@ -46,7 +46,7 @@ public class PlayerLogic : Logic {
     public void Awake() {
         audio = GetComponent<AudioSource>();
         coreComponent = GetComponent<GameEntity>();
-        rigidBodyRef = GetComponent<Rigidbody>();
+        rigidBodyRef = transform.Find("Model").GetComponent<Rigidbody>();
     }
 
     public void Init(GameController gc, int playerID, Vector2 spawnPos, Quaternion spawnRot) {
@@ -132,8 +132,9 @@ public class PlayerLogic : Logic {
             if (rigidBodyRef.velocity.magnitude > MaxSpeed) {
                 rigidBodyRef.velocity = rigidBodyRef.velocity.normalized * MaxSpeed;
             }
-            Vector3 targetPosition = new Vector3(moveVector.x, this.transform.position.y, moveVector.z);
-            transform.right = targetPosition;
+            Vector3 targetPosition = new Vector3(moveVector.x, 0f, moveVector.z);
+            transform.Find("Model").right = targetPosition;
+            //transform.right = targetPosition;
         }
     }
     public void Respawn() {
