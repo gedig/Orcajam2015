@@ -9,9 +9,13 @@
 *.sln
 *.stamp
 *.suo
+Library/assetDatabase*
+
 
 #Folders
 obj/*
 Temp/*
+RewiredBackup/*
+Assets/Rewired/*
 Library/ShaderCache/*
 Library/metadata/*
