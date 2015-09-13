@@ -11,7 +11,24 @@ public class Whale : MonoBehaviour {
 	public float upDownRange = 60.0f;
 	public Camera playerCamera;
 
+    private Vector3 topLeft;
+    private Vector3 bottomRight;
+
+    // TODO-DG: Get Screen Bounds (of camera, also for player boats
+    // TODO-DG: Implement breath for whale, have to recharge by coming up for air
+    // TODO-DG: Whale location appears as dark spot when close-ish to surface
+    // TODO-DG: Bubbles to show whale randomly as oxygen runs out.
+    // TODO-DG: move away from walls and foghorns, move towards open water (shrimp?)
+
+    private Transform childModel;
+    [SerializeField] private GameController gameController;
+
     private bool isAI = true; // Set to false when there is an oculus player.
+
+    void Start() {
+        childModel = transform.Find("whalewhale");
+
+    }
 
 	void Update () {
         if (isAI) {
@@ -41,7 +58,6 @@ public class Whale : MonoBehaviour {
                             // TODO-DG: Maybe increase the separation distance?
                             angle += steerDirection * separationContribution / separationDistance;
                         }
-                        
                     }
                 }
             }*/
@@ -71,11 +87,23 @@ public class Whale : MonoBehaviour {
 		    rotUpDown = Mathf.Clamp (rotUpDown, -upDownRange, upDownRange);
 		    playerCamera.transform.localRotation = Quaternion.Euler (rotUpDown, 0, 0);
 
-
 		    Vector3 speed = new Vector3 (constantSpeed,0,0);
 		    speed = transform.rotation * speed;
 
 		    transform.position += transform.forward * Time.deltaTime * constantSpeed;
+        }
+
+        if (childModel.position.x > gameController.BottomRightScreenToWorld.x - childModel.GetComponent<MeshRenderer>().bounds.size.x / 2f) {
+            //childModel.Translate(coreComponent.GameController.BottomRightScreenToWorld.x - childModel.position.x, 0f, 0f);
+            childModel.transform.position = new Vector3(gameController.BottomRightScreenToWorld.x - childModel.GetComponent<MeshRenderer>().bounds.size.x / 2f, childModel.transform.position.y, childModel.transform.position.z);
+        } else if (childModel.position.x < gameController.TopLeftScreenToWorld.x + childModel.GetComponent<MeshRenderer>().bounds.size.x / 2f) {
+            childModel.transform.position = new Vector3(gameController.TopLeftScreenToWorld.x + childModel.GetComponent<MeshRenderer>().bounds.size.x / 2f, childModel.transform.position.y, childModel.transform.position.z);
+        }
+
+        if (childModel.position.z > gameController.TopLeftScreenToWorld.z - childModel.GetComponent<MeshRenderer>().bounds.size.z / 2f) {
+            childModel.transform.position = new Vector3(childModel.transform.position.x, childModel.transform.position.y, gameController.TopLeftScreenToWorld.z - childModel.GetComponent<MeshRenderer>().bounds.size.z / 2f);
+        } else if (childModel.position.z < gameController.BottomRightScreenToWorld.z + childModel.GetComponent<MeshRenderer>().bounds.size.z / 2f) {
+            childModel.transform.position = new Vector3(childModel.transform.position.x, childModel.transform.position.y, gameController.BottomRightScreenToWorld.z + childModel.GetComponent<MeshRenderer>().bounds.size.z / 2f);
         }
 	}
 }

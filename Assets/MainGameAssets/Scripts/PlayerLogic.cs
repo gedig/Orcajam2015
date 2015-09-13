@@ -45,16 +45,26 @@ public class PlayerLogic : Logic {
     private Transform horn;
     private IEnumerator hornAnim;
     private bool hornAnimating = false;
+
+    private Transform childModel;
+    private GameObject whale;
+    private ParticleSystem cameraFlash;
     [SerializeField] private AudioClip[] foghorns;
 
+    private int score = 0;
+    private TextMesh scoreText;
+
     public void Awake() {
+        whale = GameObject.Find("whalewhale");
         hornAnim = HornAnim();
-        Transform child = transform.Find("Model");
-        horn = child.Find("Horn");
-        mAudio = child.GetComponent<AudioSource>();
+        childModel = transform.Find("Model");
+        cameraFlash = childModel.Find("Boaters").GetComponent<ParticleSystem>();
+        horn = childModel.Find("Horn");
+        scoreText = childModel.Find("Score").GetComponent<TextMesh>();
+        mAudio = childModel.GetComponent<AudioSource>();
         coreComponent = GetComponent<GameEntity>();
         particle = horn.GetComponent<ParticleSystem>();
-        rigidBodyRef = child.GetComponent<Rigidbody>();
+        rigidBodyRef = childModel.GetComponent<Rigidbody>();
     }
 
     public void Init(GameController gc, int playerID, Vector2 spawnPos, Quaternion spawnRot) {
@@ -77,6 +87,20 @@ public class PlayerLogic : Logic {
         } else {
             if (shotTimer > 0.0f) {
                 shotTimer -= Time.deltaTime;
+            }
+            if (shotTimer <= 0f) {
+                if (Vector3.Distance(childModel.position, whale.transform.position) < 20f && whale.transform.position.y > -0.5f) {
+                    // TODO-DG: Add cooldown, add points
+                    // Take picture of whale
+                    score += 100;
+                    scoreText.text = "" + score;
+                    cameraFlash.transform.LookAt(whale.transform.position);
+                    cameraFlash.Emit(1000);
+                    shotTimer = attackCooldown + Random.value / 3f;
+                    if (score >= 5000) {
+                        coreComponent.GameController.EndGame(inputID);
+                    }
+                }
             }
         }
         
@@ -112,17 +136,7 @@ public class PlayerLogic : Logic {
 
     private void ProcessMovementInput() {
         moveVector = PlayerInputController.Instance.GetMovement(inputID);
-        aimVector = PlayerInputController.Instance.GetAim(inputID);
-
         MovePlayer();
-
-        if (aimVector.x != 0.0f || aimVector.y != 0.0f) {
-            if (shotTimer <= 0.0f) { // check cooldown and fire, if possible
-                // Shoot!
-                //coreComponent.GameController.ShootBullet(aimVector, this);
-                shotTimer = attackCooldown;
-            }
-        }
     }
 
     private void ProcessButtons() {
@@ -130,8 +144,7 @@ public class PlayerLogic : Logic {
             if (PlayerInputController.Instance.GetFoghorn(inputID, i+1)) {
                 // Play Foghorn sound
                 mAudio.PlayOneShot(foghorns[i]);
-                particle.Emit(1);
-                // TODO-DG: Lerp horn to animate up to 3x in x or y, shrink down to .5x, then return to normal
+                particle.Emit(10);
                 if (!hornAnimating) {
                     StopCoroutine(hornAnim);
                     hornAnim = HornAnim(); // Seriously no better way to reset a coroutine? :/
@@ -141,6 +154,7 @@ public class PlayerLogic : Logic {
         }
     }
 
+    //Lerp horn to animate up to 3x in x or y, shrink down to .5x, then return to normal
     private float maxSize = 3.0f;
     private float minSize = .5f;
     private WaitForFixedUpdate itsame = new WaitForFixedUpdate();
@@ -189,6 +203,19 @@ public class PlayerLogic : Logic {
             }
             Vector3 targetPosition = new Vector3(moveVector.x, 0f, moveVector.z);
             transform.Find("Model").right = targetPosition;
+        }
+
+        if (childModel.position.x > coreComponent.GameController.BottomRightScreenToWorld.x - childModel.GetComponent<MeshRenderer>().bounds.size.x / 2f) {
+            //childModel.Translate(coreComponent.GameController.BottomRightScreenToWorld.x - childModel.position.x, 0f, 0f);
+            childModel.transform.position = new Vector3(coreComponent.GameController.BottomRightScreenToWorld.x - childModel.GetComponent<MeshRenderer>().bounds.size.x / 2f, childModel.transform.position.y, childModel.transform.position.z);
+        } else if (childModel.position.x < coreComponent.GameController.TopLeftScreenToWorld.x + childModel.GetComponent<MeshRenderer>().bounds.size.x / 2f) {
+            childModel.transform.position = new Vector3(coreComponent.GameController.TopLeftScreenToWorld.x + childModel.GetComponent<MeshRenderer>().bounds.size.x / 2f, childModel.transform.position.y, childModel.transform.position.z);
+        }
+
+        if (childModel.position.z > coreComponent.GameController.TopLeftScreenToWorld.z - childModel.GetComponent<MeshRenderer>().bounds.size.z / 2f) {
+            childModel.transform.position = new Vector3(childModel.transform.position.x, childModel.transform.position.y, coreComponent.GameController.TopLeftScreenToWorld.z - childModel.GetComponent<MeshRenderer>().bounds.size.z / 2f);
+        } else if (childModel.position.z < coreComponent.GameController.BottomRightScreenToWorld.z + childModel.GetComponent<MeshRenderer>().bounds.size.z / 2f) {
+            childModel.transform.position = new Vector3(childModel.transform.position.x, childModel.transform.position.y, coreComponent.GameController.BottomRightScreenToWorld.z + childModel.GetComponent<MeshRenderer>().bounds.size.z / 2f);
         }
     }
     public void Respawn() {

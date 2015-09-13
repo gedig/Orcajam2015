@@ -37,15 +37,15 @@ public class PlayerInputController : Singleton<PlayerInputController> {
         return moveVector;
     }
 
-    public Vector3 GetAim(int id) {
+    /*public Vector3 GetAim(int id) {
         Vector3 aimVector = new Vector2();
         aimVector.x = players[id].GetAxis("AimHorizontal");
         aimVector.z = players[id].GetAxis("AimVertical");
         return aimVector;
-    }
+    }*/
 
     public bool GetFoghorn(int playerID, int foghornID = 1) {
-        return players[playerID].GetButton("Foghorn" + foghornID);
+        return players[playerID].GetButtonDown("Foghorn" + foghornID);
     }
 
     #region DropIn
@@ -62,28 +62,5 @@ public class PlayerInputController : Singleton<PlayerInputController> {
         }
         return -1;
     }
-    /**
-     * If there are unassigned players, return the base that they have requested to join
-     **/
-    /*public bool QueryCommandButtons(int id, out GameObject targetBase) {
-        bool rush = false;
-        bool pressed = false;
-        targetBase = null;
-        foreach (string buttonName in GameSettings.Instance.CommandTable.Keys) {    // TODO-DG: Any way to get rid of this foreach loop?
-            if (players[id].GetButtonDoublePressDown(buttonName)) {
-                rush = true;
-                pressed = true;
-            } else if (players[id].GetButtonDown(buttonName)) {
-                pressed = true;
-            }
-
-            if (pressed) {
-                targetBase = GameSettings.Instance.CommandTable[buttonName];
-                break;
-            }
-        }
-
-        return rush;   
-    }*/
     #endregion // DG: Code from Shipwreck.
 }
